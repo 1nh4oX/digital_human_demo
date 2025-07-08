@@ -1,0 +1,52 @@
+[
+  {
+    "question": "深圳大学",
+    "answer": "深圳大学是中国南方一流的高校之一，简称“深大”。",
+    "topic": "szu_school"
+  },
+  {
+    "question": "深圳大学学费",
+    "answer": "深圳大学的本科生学费大约在每年5000~10000元之间。",
+    "topic": "szu_school"
+  },
+  {
+    "question": "讯飞星火大模型",
+    "answer": "星火大模型是科大讯飞推出的一个大型语言模型。",
+    "topic": "other"
+  },
+  {
+    "question": "开发者",
+    "answer": "由Mono开发!",
+    "topic": "other"
+  },
+  {
+    "question": "难吃食堂",
+    "answer": "荔天食堂最难吃了...",
+    "topic": "szu_life"
+  },
+  {
+    "question": "最烂食堂",
+    "answer": "荔天食堂最难吃了...",
+    "topic": "szu_life"
+  },
+  {
+    "question": "最难吃的食堂",
+    "answer": "荔天食堂最难吃了...",
+    "topic": "szu_life"
+  },
+  {
+    "question": "深圳大学好专业",
+    "answer": "南特金融科技学院<3",
+    "topic": "szu_school"
+  },
+  {
+    "question": "1+1",
+    "answer": "等于2",
+    "topic": "other"
+  },
+  {
+    "question": "2023362015",
+    "answer": "Hi, Mono ,welcome back <3",
+    "topic": "other"
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // 🐍 Python 配置
+    {
+      "name": "Python: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+
+    // 🧠 C++ 编译并运行（适用于 g++）
+    {
+      "name": "C++: 编译并运行当前文件",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "lldb", // Mac 用 lldb，Windows 用 gdb
+      "preLaunchTask": "build active file",
+      "setupCommands": [
+        {
+          "description": "启用漂亮打印",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

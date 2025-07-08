@@ -1,0 +1,6 @@
+# api/API.py
+SPARKAI_URL = 'wss://spark-api.xf-yun.com/v4.0/chat'
+SPARKAI_APP_ID = '5180bc4d'
+SPARKAI_API_SECRET = 'YzFlMWNmM2E1YmI5MDVlNmVjMDczZTg0'
+SPARKAI_API_KEY = 'df617b36d483f1ad77402505e39a08a4'
+SPARKAI_DOMAIN = '4.0Ultra'
