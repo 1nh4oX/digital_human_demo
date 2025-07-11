@@ -1,3 +1,4 @@
+# from api.config import PORT, export_to_frontend
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sparkai.llm.llm import ChatSparkLLM
@@ -10,9 +11,9 @@ from api.API import (
     SPARKAI_API_SECRET,
     SPARKAI_DOMAIN
 )
-
+PORT=5200
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+CORS(app, resources={r"/*": {"origins": f"http://localhost:{PORT}"}})
 
 # 初始化模型
 spark = ChatSparkLLM(
@@ -51,4 +52,4 @@ def chat():
     return jsonify({"reply": ai_reply})
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=PORT, debug=True)

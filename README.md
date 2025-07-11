@@ -7,6 +7,7 @@
 4.Model from blender中存放着数字的形象，目前为ready player me粗略生成的，有待打磨。
 5.Front中是vue框架，是项目呈现给用户的前端，直接讲/Project/Front/src/App.vue打开即可
 6.先打开Server，再运行.vue
+7.本地运行端口号为5200.
 
 当下的任务是
     1优化互动
@@ -15,8 +16,10 @@
     4数字人外观打磨，贴合学院
     5.UI再设计再讨论
     6.人物动画可以从Mixamo搬
+    7.实现跨域访问服务器
 
-关键技术（还没研究完TT）：
+关键技术（还没研究完T.T）：
     three.js
     track
+    跨域交互
     

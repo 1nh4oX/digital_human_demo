@@ -1,4 +1,5 @@
 <script setup>
+
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
@@ -114,16 +115,23 @@ const sendMessage = async () => {
   messages.value.push({ role: 'user', text: userMessage })
   inputText.value = ''
 
-  // 调用后端 Python 接口（此处暂用 mock）
-  const reply = await fetch('http://localhost:5000/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message: userMessage })
-  }).then(res => res.json()).then(data => data.reply).catch(() => '(Brian Disconnected)')
+  try {
+    const res = await fetch('http://127.0.0.1:5200/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message: userMessage })
+    })
 
-  messages.value.push({ role: 'ai', text: reply })
+    if (!res.ok) throw new Error('服务器响应异常')
 
-  // 滚动到底部（可选优化）
+    const data = await res.json()
+    messages.value.push({ role: 'ai', text: data.reply })
+  } catch (err) {
+    messages.value.push({ role: 'ai', text: '❌ 后端未响应，请检查 Flask 是否启动' })
+  }
+
   setTimeout(() => {
     const record = document.querySelector('.record')
     if (record) record.scrollTop = record.scrollHeight
@@ -169,13 +177,12 @@ const sendMessage = async () => {
         </div>
       </div>
       <div class="input_box">
-        <input
-          type="text"
+        <textarea
           class="question"
           placeholder="Type your question here..."
           v-model="inputText"
           @keyup.enter="sendMessage"
-        />
+        ></textarea>
         <div class="send_button" @click="sendMessage">Send</div>
       </div>
     </div>
@@ -184,8 +191,8 @@ const sendMessage = async () => {
 
 <style scoped>
 .Main {
-  width: 80vw;
-  height: 90vh;
+  width: 1560px;
+  height:960px;
   min-width: 600px;
   min-height: 400px;
   background-color: white;
@@ -197,11 +204,14 @@ const sendMessage = async () => {
   justify-content: center;
   align-items: center;
   gap: 4%;
+  position: relative;
+  margin-left: -150px; /* 距离左侧 100px */
 }
 .Dig_appearance,
 .interact {
   width: 47%;
   height: 100%;
+  box-sizing: border-box;
   background-color: honeydew;
   border: 1px solid #000;
   border-radius: 12px;
@@ -211,6 +221,7 @@ const sendMessage = async () => {
   justify-content: center;
   align-items: center;
   position: relative;
+  overflow: hidden;
 }
 .interact {
   gap: 20px;
@@ -243,6 +254,7 @@ const sendMessage = async () => {
 
 .record {
   width: 95%;
+  height: 70%;
   min-height: 350px;
   background-color: azure;
   border: 1px solid #000;
@@ -250,38 +262,56 @@ const sendMessage = async () => {
   box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 10px;
+  flex-shrink: 0;
 }
 
 .input_box {
   width: 80%;
-  height: auto;
+  height: 20%;
+  position: relative;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .question {
   width: 100%;
+  min-height: 40px;
+  max-height: 72px;
+  resize: none;
+  overflow-y: auto;
   padding: 8px;
   font-size: 14px;
   border-radius: 6px;
   border: 1px solid #ccc;
+  line-height: 1.4;
+  box-sizing: border-box;
+   font-size: 20px;
+  line-height: 1.5;
+  font-weight: 400; /* 稍微加粗 */
 }
 
 .send_button {
-  width: 60px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
   background-color: #50e3c2;
   color: white;
   text-align: center;
-  line-height: 30px;
-  border-radius: 6px;
+  line-height: 36px;
+  border-radius: 50%;
   cursor: pointer;
+  font-size: 14px;
 }
 </style>
 
@@ -312,9 +342,10 @@ body {
 .message {
   width: 90%;
   margin: 6px 0;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 25px;
+  line-height: 1.5;
   word-break: break-word;
+  font-weight: 600; /* 稍微加粗 */
 }
 .message.user {
   text-align: right;
