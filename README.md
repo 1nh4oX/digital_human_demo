@@ -6,7 +6,7 @@
 件，作为项目的核心主体。
 4.Model from blender中存放着数字的形象，目前为ready player me粗略生成的，有待打磨。
 5.Front中是vue框架，是项目呈现给用户的前端，直接讲/Project/Front/src/App.vue打开即可
-
+6.先打开Server，再运行.vue
 
 当下的任务是
     1优化互动
