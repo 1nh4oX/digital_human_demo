@@ -31,7 +31,7 @@
 
 cd Project                             # 进入到Project路径下，准确来说应该是cd ../../.../Project
 python3 -m venv .venv                  # 第一次运行创建虚拟环境
-source .venv/bin/activate              ## Windows 用 .venv\Scripts\activate ##
+source .venv/bin/activate              ##进入虚拟环境 Windows 用 .venv\Scripts\activate ##
 pip install -r requirements.txt        # 安装依赖
 cd Brain
 python3 Server.py                      # 启动后端服务器
