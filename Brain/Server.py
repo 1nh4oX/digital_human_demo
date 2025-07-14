@@ -1,4 +1,4 @@
-# from api.config import PORT, export_to_frontend
+# 从api文件夹里获取信息，设置端口与前端通讯
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sparkai.llm.llm import ChatSparkLLM
