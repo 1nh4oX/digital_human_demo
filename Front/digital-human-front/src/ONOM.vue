@@ -108,34 +108,50 @@ const isStopped = ref(false)
 const inputText = ref('')
 const messages = ref([])
 
+// 判断是否在生成
+const isGenerating = ref(false)
+const isThinking = ref(false)
+const stopRequested = ref(false)
+
 const sendMessage = async () => {
-  if (!inputText.value.trim()) return
+  if (!inputText.value.trim() || isGenerating.value) return
 
   const userMessage = inputText.value.trim()
   messages.value.push({ role: 'user', text: userMessage })
   inputText.value = ''
 
+  isThinking.value = true
+  isGenerating.value = true
+  stopRequested.value = false
+
   try {
     const res = await fetch('http://127.0.0.1:5200/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: userMessage })
     })
 
-    if (!res.ok) throw new Error('服务器响应异常')
+    if (!res.ok || stopRequested.value) throw new Error('中断')
 
     const data = await res.json()
     messages.value.push({ role: 'ai', text: data.reply })
   } catch (err) {
-    messages.value.push({ role: 'ai', text: '❌ 后端未响应，请检查 Flask 是否启动' })
+    messages.value.push({ role: 'ai', text: stopRequested.value ? 'Answer is declined.' : '❌ 后端未响应，请检查 Flask 是否启动' })
+  } finally {
+    isThinking.value = false
+    isGenerating.value = false
   }
 
   setTimeout(() => {
     const record = document.querySelector('.record')
     if (record) record.scrollTop = record.scrollHeight
   }, 100)
+}
+
+const stopGenerating = () => {
+  stopRequested.value = true
+  isThinking.value = false
+  isGenerating.value = false
 }
 </script>
 
@@ -173,7 +189,11 @@ const sendMessage = async () => {
           :key="index"
           :class="['message', msg.role]"
         >
-          {{ msg.role === 'user' ? 'User: ' : 'ONOM: ' }}{{ msg.text }}
+          {{ msg.text }}
+        </div>
+        <!-- AI 正在思考中 -->
+        <div v-if="isThinking" class="message ai thinking">
+          <span class="dots">...</span>
         </div>
       </div>
       <div class="input_box">
@@ -183,7 +203,12 @@ const sendMessage = async () => {
           v-model="inputText"
           @keyup.enter="sendMessage"
         ></textarea>
-        <div class="send_button" @click="sendMessage">Send</div>
+        <div 
+          class="send_button" 
+          @click="isGenerating ? stopGenerating() : sendMessage"
+        >
+          {{ isGenerating ? 'Stop' : 'Send' }}
+        </div>
       </div>
     </div>
   </div>
@@ -340,19 +365,39 @@ body {
 
 <style scoped>
 .message {
-  width: 90%;
+  max-width: 80%;
+  padding: 10px 14px;
   margin: 6px 0;
-  font-size: 25px;
+  font-size: 18px;
   line-height: 1.5;
   word-break: break-word;
-  font-weight: 600; /* 稍微加粗 */
+  border-radius: 12px;
+  position: relative;
+  font-weight: 500;
 }
+
 .message.user {
-  text-align: right;
+  align-self: flex-end;
+  background-color: #dcf8c6;
   color: #333;
+  border-bottom-right-radius: 0;
 }
+
 .message.ai {
-  text-align: left;
+  align-self: flex-start;
+  background-color: #f1f0f0;
   color: #0a529c;
+  border-bottom-left-radius: 0;
+}
+.thinking .dots {
+  font-size: 20px;
+  color: #888;
+  animation: breathing 1.5s ease-in-out infinite;
+}
+
+@keyframes breathing {
+  0% { color: #333; }
+  50% { color: #aaa; }
+  100% { color: #333; }
 }
 </style>
