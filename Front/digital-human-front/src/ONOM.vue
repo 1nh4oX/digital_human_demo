@@ -97,14 +97,14 @@ const stopRequested = ref(false)
 import { CozeAPI } from '@coze/api'
 
 const apiClient = new CozeAPI({
-  token: 'cztei_qGn8N6FphI9OT3GbKrU02N4JCf1jH0oj8tlFOrPJtF7jaiP9oGbZ0XwpEEXug96Xh',
+  token: 'cztei_hMCbAuSCkd18X8LdEMg8t9HfoITSnjWtEBxUg44bZ8lSwulPEpCzeS5OvVAmDUrFq',
   baseURL: 'https://api.coze.cn',
 })
 
 const askCozeStream = async (userMessage, pushToken) => {
   try {
     const stream = await apiClient.chat.stream({
-      bot_id: '7527898944106823690',
+      bot_id: '7527930097362911232',
       user_id: 'Mono',
       additional_messages: [
         {
@@ -145,14 +145,12 @@ const sendMessage = async () => {
   isGenerating.value = true
   stopRequested.value = false
 
-  let currentReply = ''
-  messages.value.push({ role: 'ai', text: currentReply })
+  let currentReply = '...'
+  const aiMsgIndex = messages.value.push({ role: 'ai', text: currentReply }) - 1
 
   const updateReply = (newText) => {
     currentReply = newText
-    //console.log('更新内容:', currentReply)
-    const lastIndex = messages.value.length - 1
-    messages.value.splice(lastIndex, 1, { ...messages.value[lastIndex], text: currentReply })
+    messages.value.splice(aiMsgIndex, 1, { role: 'ai', text: currentReply })
   }
 
   await askCozeStream(userMessage, updateReply)
@@ -186,7 +184,11 @@ const stopGenerating = () => {
 
     <div class="interact">
       <div class="record">
-        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.role]">
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          :class="['message', msg.role, msg.text === '...' ? 'thinking' : '']"    
+        >
           {{ msg.text }}
         </div>
       </div>
@@ -380,8 +382,8 @@ body {
   color: #0a529c;
   border-bottom-left-radius: 0;
 }
-.thinking .dots {
-  font-size: 20px;
+.thinking {
+  font-style: italic;
   color: #888;
   animation: breathing 1.5s ease-in-out infinite;
 }
