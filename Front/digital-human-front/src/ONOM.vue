@@ -1,18 +1,13 @@
 <script setup>
-
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
-///////////////////////模型导入
-// 关键对象--container
 const container = ref(null)
 
 let scene, camera, renderer, controls, model, animationFrameId
 
-// 初始化元素，比如场景，模型，摄像头...
-  // 同时包含加载模型
 const initThree = () => {
   scene = new THREE.Scene()
 
@@ -23,13 +18,11 @@ const initThree = () => {
     1000
   )
   camera.position.set(0, 1.5, 3)
-  
-  // 创建渲染器############
+
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
   renderer.setSize(container.value.clientWidth, container.value.clientHeight)
   container.value.appendChild(renderer.domElement)
 
-  // 加灯光
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)
   scene.add(hemiLight)
 
@@ -41,14 +34,12 @@ const initThree = () => {
   dirLight2.position.set(-5, -10, -7)
   scene.add(dirLight2)
 
-  // 环境灯
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
   scene.add(ambientLight)
 
   controls = new OrbitControls(camera, renderer.domElement)
   controls.enableDamping = true
 
-  // 上传模型
   const loader = new GLTFLoader()
   loader.load(
     window.location.origin + '/Tracer.glb',
@@ -56,9 +47,6 @@ const initThree = () => {
       model = gltf.scene
       model.position.y = -0.8
       scene.add(model)
-
-      // console.log("GLTF 内容:", gltf)
-      // console.log("骨架结构:", gltf.scene.children)
     },
     undefined,
     (error) => {
@@ -67,18 +55,15 @@ const initThree = () => {
   )
 }
 
-// set movements
 const animate = () => {
   animationFrameId = requestAnimationFrame(animate)
   if (model) {
-    model.rotation.y += 0.005 // 转圈->为了展示模型（后期改为具体动作）
+    model.rotation.y += 0.005
   }
   controls.update()
   renderer.render(scene, camera)
 }
 
-
-// 保持等比适应变化
 const onResize = () => {
   if (!container.value) return
   camera.aspect = container.value.clientWidth / container.value.clientHeight
@@ -99,19 +84,55 @@ onBeforeUnmount(() => {
   controls.dispose()
 })
 
-///////////////////页面设置
-// 设置两个控制模型的按钮状态
 const isMuted = ref(false)
 const isStopped = ref(false)
 
-// 新增对话内容及输入框响应式变量
 const inputText = ref('')
 const messages = ref([])
 
-// 判断是否在生成
 const isGenerating = ref(false)
 const isThinking = ref(false)
 const stopRequested = ref(false)
+
+import { CozeAPI } from '@coze/api'
+
+const apiClient = new CozeAPI({
+  token: 'cztei_qGn8N6FphI9OT3GbKrU02N4JCf1jH0oj8tlFOrPJtF7jaiP9oGbZ0XwpEEXug96Xh',
+  baseURL: 'https://api.coze.cn',
+})
+
+const askCozeStream = async (userMessage, pushToken) => {
+  try {
+    const stream = await apiClient.chat.stream({
+      bot_id: '7527898944106823690',
+      user_id: 'Mono',
+      additional_messages: [
+        {
+          content: userMessage,
+          content_type: "text",
+          role: "user",
+          type: "question"
+        }
+      ]
+    });
+
+    let reply = '';
+    for await (const event of stream) {
+      if (event.event === 'conversation.message.delta') {
+        const delta = event.data?.content || event.data?.message?.content;
+        if (delta) {
+          if (isThinking.value) isThinking.value = false; // 👈 加这行
+          reply += delta;
+          //console.log('当前累积回复:', reply);
+          pushToken(reply);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('❌ Coze 连接失败：', err);
+    pushToken('❌ 无法连接 Coze API');
+  }
+};
 
 const sendMessage = async () => {
   if (!inputText.value.trim() || isGenerating.value) return
@@ -124,23 +145,20 @@ const sendMessage = async () => {
   isGenerating.value = true
   stopRequested.value = false
 
-  try {
-    const res = await fetch('http://127.0.0.1:5200/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: userMessage })
-    })
+  let currentReply = ''
+  messages.value.push({ role: 'ai', text: currentReply })
 
-    if (!res.ok || stopRequested.value) throw new Error('中断')
-
-    const data = await res.json()
-    messages.value.push({ role: 'ai', text: data.reply })
-  } catch (err) {
-    messages.value.push({ role: 'ai', text: stopRequested.value ? 'Answer is declined.' : '❌ 后端未响应，请检查 Flask 是否启动' })
-  } finally {
-    isThinking.value = false
-    isGenerating.value = false
+  const updateReply = (newText) => {
+    currentReply = newText
+    //console.log('更新内容:', currentReply)
+    const lastIndex = messages.value.length - 1
+    messages.value.splice(lastIndex, 1, { ...messages.value[lastIndex], text: currentReply })
   }
+
+  await askCozeStream(userMessage, updateReply)
+
+  isThinking.value = false
+  isGenerating.value = false
 
   setTimeout(() => {
     const record = document.querySelector('.record')
@@ -158,42 +176,18 @@ const stopGenerating = () => {
 <template>
   <div class="Main">
     <div class="Dig_appearance">
-      <div 
-        class="appearance" 
-        ref="container">
-      </div>
-      
-      <div class="controls">
-        <button 
-          class="mute"
-          :class="{ active:isMuted }"
-          @click="isMuted=!isMuted"
-        >
-          🎤Mute
-        </button>
-        <button 
-          class="still"
-          :class="{ active:isStopped}"
-          @click="isStopped=!isStopped"
-          >
-          🛑Stop
-        </button>
+      <div class="appearance" ref="container"></div>
 
+      <div class="controls">
+        <button class="mute" :class="{ active: isMuted }" @click="isMuted = !isMuted">🎤Mute</button>
+        <button class="still" :class="{ active: isStopped }" @click="isStopped = !isStopped">🛑Stop</button>
       </div>
     </div>
 
     <div class="interact">
       <div class="record">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          :class="['message', msg.role]"
-        >
+        <div v-for="(msg, index) in messages" :key="index" :class="['message', msg.role]">
           {{ msg.text }}
-        </div>
-        <!-- AI 正在思考中 -->
-        <div v-if="isThinking" class="message ai thinking">
-          <span class="dots">...</span>
         </div>
       </div>
       <div class="input_box">
@@ -203,10 +197,7 @@ const stopGenerating = () => {
           v-model="inputText"
           @keyup.enter="sendMessage"
         ></textarea>
-        <div 
-          class="send_button" 
-          @click="isGenerating ? stopGenerating() : sendMessage"
-        >
+        <div class="send_button" @click="isGenerating ? stopGenerating() : sendMessage">
           {{ isGenerating ? 'Stop' : 'Send' }}
         </div>
       </div>
