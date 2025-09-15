@@ -51,6 +51,26 @@ memory_data = load_memory()
 
 #     return jsonify({"reply": ai_reply})
 
+# @app.route("/chat", methods=["POST"])
+# def chat():
+#     data = request.get_json()
+#     question = data.get("message", "")
+
+#     if not question.strip():
+#         return jsonify({"reply": "我没有收到有效问题。"})
+
+#     topic = classify_topic(question)
+#     answer = search_memory(question, memory_data, topic=topic)
+
+#     if answer:
+#         return jsonify({"reply": answer})
+
+#     messages = [ChatMessage(role="user", content=question)]
+#     response = spark.generate([messages])
+#     ai_reply = response.generations[0][0].text
+
+#     return jsonify({"reply": ai_reply})
+
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
@@ -63,12 +83,14 @@ def chat():
     answer = search_memory(question, memory_data, topic=topic)
 
     # 如果有记忆：提供参考内容 + 自由表达
+    # 如果有记忆：提供参考内容 + 自由表达
     if answer:
         messages = [
             ChatMessage(role="system", content=(
                 "你是一名简洁自然的助手，"
                 "请根据提供的信息，用20到100字简洁表达出来，"
                 "不要重复记忆内容原话，也不要解释。"
+                "记忆中有网址要包含在内容里，网址不算字数。"
             )),
             ChatMessage(role="user", content=f"问题：{question}\n可参考的资料：{answer}")
         ]
@@ -76,6 +98,12 @@ def chat():
         ai_reply = response.generations[0][0].text
         return jsonify({"reply": ai_reply})
 
+
+    # 没有记忆：正常提问
+    messages = [
+        ChatMessage(role="system", content="你是一名简洁的助手，回答请控制在20-100字内，简明扼要，不要啰嗦。"),
+        ChatMessage(role="user", content=question)
+    ]
 
     # 没有记忆：正常提问
     messages = [

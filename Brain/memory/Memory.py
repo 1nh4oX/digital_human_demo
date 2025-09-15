@@ -7,7 +7,7 @@ from fuzzywuzzy import fuzz
 def classify_topic(user_input):
     user_input = user_input.lower()
     if "深圳大学" in user_input or "深大" in user_input:
-        if any(kw in user_input for kw in ["学费", "招生", "学院", "专业", "介绍"]):
+        if any(kw in user_input for kw in ["学费", "招生", "学院", "专业", "介绍","选课"]):
             return "szu_school"
         elif any(kw in user_input for kw in ["食堂", "宿舍", "生活", "难吃", "好吃", "贵", "社团"]):
             return "szu_life"
