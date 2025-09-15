@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南特金融科技学院 - 招生咨询机器人</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0055A5', // 主蓝色
+                        secondary: '#00A86B', // 辅助绿色
+                        neutral: '#F5F7FA', // 中性背景
+                        dark: '#1D2129', // 深色文本
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 10px 30px -5px rgba(0, 0, 0, 0.1)',
+                        'button': '0 4px 6px -1px rgba(0, 85, 165, 0.2)',
+                    }
+                },
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .typing-animation::after {
+                content: '';
+                animation: typing 1.5s infinite;
+            }
+            @keyframes typing {
+                0%, 100% { opacity: 0; }
+                50% { opacity: 1; }
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-white text-dark min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <img src="学院logo.jpg" alt="南特金融科技学院标志" class="h-10 w-10 rounded-lg">
+                <div>
+                    <h1 class="text-lg font-bold text-primary">南特金融科技学院</h1>
+                    <p class="text-xs text-gray-500">招生咨询智能助手</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="https://www.720yun.com/t/d8vktwr9sfy?scene_id=72926475" class="text-sm text-gray-600 hover:text-primary transition-colors duration-200">
+                    <i class="fa fa-map mr-1"></i>校园一览
+                </a>
+                <a href="https://mp.weixin.qq.com/s/w57Haz68cE7JRb7foSXK7w" class="text-sm text-gray-600 hover:text-primary transition-colors duration-200">
+                    <i class="fa fa-play-circle mr-1"></i>招生宣传片
+                </a>
+                <a href="https://safti.szu.edu.cn/" class="text-sm text-gray-600 hover:text-primary transition-colors duration-200">
+                    <i class="fa fa-home mr-1"></i>学院官网
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto px-4 py-6 md:py-10 flex flex-col md:flex-row gap-6">
+        <!-- 左侧信息面板 -->
+        <div class="hidden md:block w-1/3 bg-white rounded-xl shadow-card p-6 h-[calc(85vh-2rem)]">
+            <div class="mb-6">
+                <h2 class="text-xl font-bold text-primary mb-3 flex items-center">
+                    <i class="fa fa-info-circle mr-2 text-secondary"></i>学院简介
+                </h2>
+                <p class="text-gray-700 text-sm leading-relaxed">
+                    南特金融科技学院是深圳大学与法国南特高等商学院合作举办，是全国首个聚焦金融科技领域开展中外合作办学的非独立法人机构。
+                </p>
+            </div>
+            
+            <div>
+                <h2 class="text-xl font-bold text-primary mb-3 flex items-center">
+                    <i class="fa fa-graduation-cap mr-2 text-secondary"></i>热门咨询问题
+                </h2>
+                <ul class="space-y-2 text-sm">
+                    <li class="p-2 bg-neutral rounded-lg cursor-pointer hover:bg-primary/5 transition-colors duration-200" onclick="insertQuestion('学院的招生专业有哪些？')">
+                        <i class="fa fa-question-circle text-secondary mr-1"></i>学院的招生专业有哪些？
+                    </li>
+                    <li class="p-2 bg-neutral rounded-lg cursor-pointer hover:bg-primary/5 transition-colors duration-200" onclick="insertQuestion('双学位项目的具体要求是什么？')">
+                        <i class="fa fa-question-circle text-secondary mr-1"></i>双学位项目的具体要求是什么？
+                    </li>
+                    <li class="p-2 bg-neutral rounded-lg cursor-pointer hover:bg-primary/5 transition-colors duration-200" onclick="insertQuestion('学院的师资力量如何？')">
+                        <i class="fa fa-question-circle text-secondary mr-1"></i>学院的师资力量如何？
+                    </li>
+                    <li class="p-2 bg-neutral rounded-lg cursor-pointer hover:bg-primary/5 transition-colors duration-200" onclick="insertQuestion('毕业生的就业方向有哪些？')">
+                        <i class="fa fa-question-circle text-secondary mr-1"></i>毕业生的就业方向有哪些？
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- 右侧聊天面板 -->
+        <div class="w-full md:w-2/3 bg-white rounded-xl shadow-card overflow-hidden flex flex-col h-[calc(85vh-2rem)]">
+            <!-- 聊天头部 -->
+            <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="机器人头像.png" alt="咨询机器人头像" class="h-10 w-10 rounded-full">
+                    <div class="ml-3">
+                        <h3 class="font-semibold text-primary">智能招生助手</h3>
+                        <p class="text-xs text-gray-500">我可以回答你关于南特金融科技学院的招生问题</p>
+                    </div>
+                </div>
+                <button class="text-gray-500 hover:text-gray-700 p-2">
+                    <i class="fa fa-ellipsis-v"></i>
+                </button>
+            </div>
+            
+            <!-- 聊天内容区 -->
+            <div id="chatContainer" class="flex-grow p-4 overflow-y-auto scrollbar-hide space-y-4">
+                <!-- 欢迎消息 -->
+                <div class="flex items-start animate-fade-in">
+                    <div class="max-w-[80%] bg-neutral rounded-lg rounded-tl-none p-3 shadow-sm ml-0">
+                        <p class="text-sm leading-relaxed">你好！我是南特金融科技学院的智能招生助手。有什么关于学院招生的问题，我可以帮你解答？</p>
+                        <div class="flex mt-2 space-x-2">
+                            <button class="text-xs bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-full transition-colors duration-200" onclick="insertQuestion('学院的招生专业有哪些？')">
+                                招生专业
+                            </button>
+                            <button class="text-xs bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-full transition-colors duration-200" onclick="insertQuestion('录取分数线是多少？')">
+                                录取分数线
+                            </button>
+                            <button class="text-xs bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1 rounded-full transition-colors duration-200" onclick="insertQuestion('双学位项目如何申请？')">
+                                双学位项目
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="p-4 border-t border-gray-100">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="userInput" 
+                        placeholder="请输入你的问题..." 
+                        class="w-full pl-4 pr-12 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200"
+                    >
+                    <button 
+                        id="sendBtn" 
+                        class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white p-2 rounded-full hover:bg-primary/90 shadow-button transition-all duration-200"
+                    >
+                        <i class="fa fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    输入"菜单"查看常见问题，或输入"转人工"联系招生办老师
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- 联系方式信息框 -->
+    <div class="bg-neutral py-6 border-t border-gray-200">
+        <div class="container mx-auto px-4">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
+                    <i class="fa fa-phone mr-2 text-secondary"></i>联系方式
+                </h2>
+                <div class="grid md:grid-cols-3 gap-6 text-sm">
+                    <div class="flex items-start">
+                        <i class="fa fa-envelope-o text-secondary mt-1 mr-2"></i>
+                        <span>邮箱：safti-admission@szu.edu.cn</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fa fa-phone text-secondary mt-1 mr-2"></i>
+                        <span>电话：0755-26531523</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fa fa-map-marker text-secondary mt-1 mr-2"></i>
+                        <span>地址：广东省深圳市南山区南海大道3688号</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-100 py-6">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-sm text-gray-600">© 2025 南特金融科技学院. 保留所有权利.</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-200">
+                        <i class="fa fa-weixin text-lg"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-200">
+                        <i class="fa fa-weibo text-lg"></i>
+                    </a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors duration-200">
+                        <i class="fa fa-linkedin text-lg"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // DOM 元素
+        const chatContainer = document.getElementById('chatContainer');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const navbar = document.getElementById('navbar');
+
+        
+        // 模拟数据 - 常见问题及回答
+        const faqData = {
+            "招生专业有哪些": "学院目前开设金融科技、电子商务、信息管理与信息系统三个本科专业。所有专业均采用双学位培养模式，学生毕业后将获得深圳大学本科毕业证书、学士学位证书以及法国南特高等商学院学士学位证书。",
+            "录取分数线": "学院各专业录取分数线因省份而异。一般来说，录取分数线在各省本科一批线上50-100分左右。具体分数线可参考学院官网公布的历年数据或咨询当地招生办公室。",
+            "双学位项目": "学院所有专业均为双学位项目。学生在满足两校毕业要求后，将获得深圳大学本科毕业证书、学士学位证书以及法国南特高等商学院学士学位证书。项目采用全英文授课，学生需达到一定的英语水平要求。",
+            "师资力量": "学院师资由深圳大学和法国南特高等商学院联合组建。中方教师均具有海外留学背景或丰富的行业经验，法方教师由南特高商选派，其中80%以上拥有博士学位。此外，学院还聘请了多位行业专家担任兼职教授。",
+            "就业方向": "毕业生主要就业于金融科技企业、传统金融机构、科技公司等领域，从事金融产品设计、数据分析、软件开发、风险管理等工作。近年来，毕业生就业率保持在95%以上，其中约40%选择继续深造，其余进入腾讯、阿里巴巴、招商银行等知名企业工作。",
+            "学费标准": "学院本科专业学费为81,500元/学年。住宿费根据住宿条件不同，约为1,500-3,000元/学年。具体费用可参考学院官网最新公告。",
+            "奖学金政策": "学院设立了丰富的奖学金体系，包括国家奖学金、国家励志奖学金、校级奖学金以及企业专项奖学金。此外，优秀学生还可申请法国南特高等商学院提供的奖学金。奖学金覆盖率超过30%。",
+            "申请流程": "考生需参加全国普通高等学校统一招生考试，并在本科提前批次或本科一批次填报我院志愿。录取结果将根据各省招生办公室公布的时间进行查询。具体申请流程可参考学院官网招生信息栏目。",
+            "课程设置": "课程设置融合了金融、科技和管理三个领域的核心知识。主要课程包括：金融市场与机构、金融工程、区块链技术、人工智能与金融、大数据分析、Python编程、数据库管理等。课程采用中英文双语教学，部分课程由法国教师直接授课。",
+            "转专业政策": "学院原则上不接受学生转专业申请。由于中外合作办学项目的特殊性，学生需在入学时确定专业，并按照培养方案完成学业。",
+            "校园生活": "学院注重学生的全面发展，提供丰富多彩的校园生活。学生可参加各类学术讲座、企业参观、文体活动等。此外，学院还设有多个学生社团，如金融科技协会、法语俱乐部等，为学生提供交流和实践的平台。",
+            "住宿条件": "学生住宿由深圳大学统一安排，一般为4人间，配备独立卫生间、空调、热水器等设施。宿舍区设有自习室、健身房、便利店等配套设施，为学生提供良好的生活和学习环境。",
+            "国际交流": "学院积极开展国际交流与合作，为学生提供海外学习和交流的机会。学生可申请参加学期交换、暑期学校、双学位硕士项目等。合作院校包括法国南特高等商学院、加拿大蒙特利尔高等商学院、新加坡管理大学等。"
+        };
+        
+        // 滚动到底部
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // 添加用户消息
+        function addUserMessage(message) {
+            const userMessage = document.createElement('div');
+            userMessage.className = 'flex items-start justify-end animate-fade-in';
+            userMessage.innerHTML = `
+                <div class="max-w-[80%] bg-primary text-white rounded-lg rounded-tr-none p-3 shadow-sm">
+                    <p class="text-sm leading-relaxed">${message}</p>
+                </div>
+                <img src="用户头像.jpg" alt="用户头像" class="h-8 w-8 rounded-full ml-2">
+            `;
+            chatContainer.appendChild(userMessage);
+            scrollToBottom();
+        }
+        
+        // 添加机器人消息
+        function addBotMessage(message) {
+            const botMessage = document.createElement('div');
+            botMessage.className = 'flex items-start animate-fade-in';
+            botMessage.innerHTML = `
+                <div class="max-w-[80%] bg-neutral rounded-lg rounded-tl-none p-3 shadow-sm ml-0">
+                    <p class="text-sm leading-relaxed">${message}</p>
+                </div>
+            `;
+            chatContainer.appendChild(botMessage);
+            scrollToBottom();
+        }
+        
+        // 添加加载状态
+        function addLoadingState() {
+            const loadingState = document.createElement('div');
+            loadingState.className = 'flex items-start animate-fade-in';
+            loadingState.innerHTML = `
+                <div class="max-w-[80%] bg-neutral rounded-lg rounded-tl-none p-3 shadow-sm ml-0">
+                    <p class="text-sm leading-relaxed typing-animation">思考中...</p>
+                </div>
+            `;
+            chatContainer.appendChild(loadingState);
+            scrollToBottom();
+            return loadingState;
+        }
+        
+        // 移除加载状态
+        function removeLoadingState(loadingState) {
+            if (loadingState && loadingState.parentNode) {
+                loadingState.parentNode.removeChild(loadingState);
+            }
+        }
+        
+        // 获取AI回答
+        function getAIResponse(question) {
+            // 简化版 - 匹配常见问题
+            question = question.toLowerCase().trim();
+            
+            // 检查是否包含关键词
+            for (const key in faqData) {
+                if (question.includes(key.toLowerCase())) {
+                    return faqData[key];
+                }
+            }
+            
+            // 特殊指令
+            if (question.includes('菜单')) {
+                return "你可以咨询以下问题：\n1. 招生专业有哪些\n2. 录取分数线\n3. 双学位项目\n4. 师资力量\n5. 就业方向\n6. 学费标准\n7. 奖学金政策\n8. 申请流程\n9. 课程设置\n10. 转专业政策\n11. 校园生活\n12. 住宿条件\n13. 国际交流";
+            }
+            
+            if (question.includes('转人工')) {
+                return "如需联系招生办老师，请拨打：0755-26531523，或发送邮件至：safti-admission@szu.edu.cn";
+            }
+            
+            // 默认回答
+            return "非常抱歉，我暂时无法回答这个问题。你可以换一种表达方式，或尝试其他问题。如需进一步咨询，请联系招生办：0755-26531523。";
+        }
+        
+        // 发送消息
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // 添加用户消息
+            addUserMessage(message);
+            
+            // 清空输入框
+            userInput.value = '';
+            
+            // 显示加载状态
+            const loadingState = addLoadingState();
+            
+            // 模拟AI思考时间
+            setTimeout(() => {
+                // 移除加载状态
+                removeLoadingState(loadingState);
+                
+                // 获取AI回答并显示
+                const response = getAIResponse(message);
+                addBotMessage(response);
+            }, 1000 + Math.random() * 1000); // 1-2秒的随机思考时间
+        }
+        
+        // 插入预设问题
+        function insertQuestion(question) {
+            userInput.value = question;
+            userInput.focus();
+        }
+        
+        // 事件监听
+        sendBtn.addEventListener('click', sendMessage);
+        
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // 滚动时导航栏样式变化
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                navbar.classList.add('shadow-md');
+                navbar.classList.remove('shadow-sm');
+            } else {
+                navbar.classList.remove('shadow-md');
+                navbar.classList.add('shadow-sm');
+            }
+        });
+        
+
+        
+        // 自动聚焦输入框
+        userInput.focus();
+    </script>
+</body>
+</html>
