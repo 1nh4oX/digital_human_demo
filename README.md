@@ -50,4 +50,4 @@ npm run dev                            # 启动 Vue 前端（默认端口 5200�
     error：若报错则用其他ide如vscode运行脚本
 ## Windows用户：双击Run4windows.bat脚本即可。
 
-#####去Front/digital-human-front/public/config.json路径下修改API密钥（Token号码，类似于："cztei_l6X0UCpQdbpyTjORvkl6VcLdADwnD4v4Ty96mWhALRol29kv1sOGRuJ1SdGudeyp5"）。
+#####去Front/digital-human-front/dist/config.json路径下修改API密钥（Token号码，类似于："cztei_l6X0UCpQdbpyTjORvkl6VcLdADwnD4v4Ty96mWhALRol29kv1sOGRuJ1SdGudeyp5"）。
