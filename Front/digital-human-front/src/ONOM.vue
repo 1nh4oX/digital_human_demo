@@ -1,17 +1,87 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import * as THREE from 'three'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { CozeAPI } from '@coze/api'
 
-import { nextTick } from 'vue'
+// ------------------------
+// Three.js 初始化
+// ------------------------
+const container = ref(null)
+let scene, camera, renderer, controls, model, animationFrameId
 
-const scrollToBottom = () => {
-  nextTick(() => {
-    const record = document.querySelector('.record')
-    if (record) {
-      record.scrollTop = record.scrollHeight
+const initThree = () => {
+  scene = new THREE.Scene()
+
+  camera = new THREE.PerspectiveCamera(
+    45,
+    container.value.clientWidth / container.value.clientHeight,
+    0.1,
+    1000
+  )
+  camera.position.set(0, 1.5, 3)
+
+  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
+  renderer.setSize(container.value.clientWidth, container.value.clientHeight)
+  container.value.appendChild(renderer.domElement)
+
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6)
+  scene.add(hemiLight)
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6)
+  dirLight1.position.set(5, 10, 7)
+  scene.add(dirLight1)
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4)
+  dirLight2.position.set(-5, -10, -7)
+  scene.add(dirLight2)
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
+  scene.add(ambientLight)
+
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableDamping = true
+
+  const loader = new GLTFLoader()
+  const modelUrl = import.meta.env.BASE_URL + 'Girl2.glb'
+  loader.load(
+    modelUrl,
+    (gltf) => {
+      model = gltf.scene
+      model.position.y = -0.8
+      scene.add(model)
+    },
+    undefined,
+    (error) => {
+      console.error('Fail! Un-fucking-able 2 Load Model:', error)
     }
-  })
+  )
 }
+
+const animate = () => {
+  animationFrameId = requestAnimationFrame(animate)
+  if (model) model.rotation.y += 0.005
+  controls.update()
+  renderer.render(scene, camera)
+}
+
+const onResize = () => {
+  if (!container.value) return
+  camera.aspect = container.value.clientWidth / container.value.clientHeight
+  camera.updateProjectionMatrix()
+  renderer.setSize(container.value.clientWidth, container.value.clientHeight)
+}
+
+onMounted(() => {
+  initThree()
+  animate()
+  window.addEventListener('resize', onResize)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onResize)
+  cancelAnimationFrame(animationFrameId)
+  renderer.dispose()
+  controls.dispose()
+})
 
 // ------------------------
 // Coze API 部分
@@ -19,6 +89,7 @@ const scrollToBottom = () => {
 const COZE_TOKEN = ref('')
 let apiClient = null
 
+// 从 public/config.json 动态读取 token
 fetch('./config.json')
   .then(res => res.json())
   .then(data => {
@@ -30,10 +101,9 @@ fetch('./config.json')
   })
   .catch(err => console.error('读取 config.json 出错:', err))
 
+// 消息状态
 const inputText = ref('')
-const messages = ref([
-  { role: 'ai', text: '你好！我是南特金融科技学院的智能招生助手。有什么关于学院招生的问题，我可以帮你解答？' }
-])
+const messages = ref([])
 const isGenerating = ref(false)
 const isThinking = ref(false)
 const stopRequested = ref(false)
@@ -49,9 +119,15 @@ const askCozeStream = async (userMessage, pushToken) => {
       bot_id: '7527930097362911232',
       user_id: 'Mono',
       additional_messages: [
-        { content: userMessage, content_type: "text", role: "user", type: "question" }
+        {
+          content: userMessage,
+          content_type: "text",
+          role: "user",
+          type: "question"
+        }
       ]
-    })
+    });
+
     let reply = ''
     for await (const event of stream) {
       if (event.event === 'conversation.message.delta') {
@@ -86,13 +162,17 @@ const sendMessage = async () => {
   const updateReply = (newText) => {
     currentReply = newText
     messages.value.splice(aiMsgIndex, 1, { role: 'ai', text: currentReply })
-    scrollToBottom()
   }
 
   await askCozeStream(userMessage, updateReply)
 
   isThinking.value = false
   isGenerating.value = false
+
+  setTimeout(() => {
+    const record = document.querySelector('.record')
+    if (record) record.scrollTop = record.scrollHeight
+  }, 100)
 }
 
 const stopGenerating = () => {
@@ -100,376 +180,228 @@ const stopGenerating = () => {
   isThinking.value = false
   isGenerating.value = false
 }
-
-const insertQuestion = (q) => {
-  inputText.value = q
-}
 </script>
 
 <template>
-  <div class="app">
-    <!-- 导航栏 -->
-    <nav class="navbar">
-      <div class="navbar-left">
-        <img src="/Logo.jpg" alt="logo" class="logo">
-        <div>
-          <h1>南特金融科技学院</h1>
-          <p>招生咨询智能助手</p>
-        </div>
-      </div>
-      <div class="navbar-right">
-        <a href="https://www.720yun.com/t/d8vktwr9sfy?scene_id=72926475">校园一览</a>
-        <a href="https://mp.weixin.qq.com/s/w57Haz68cE7JRb7foSXK7w">招生宣传片</a>
-        <a href="https://safti.szu.edu.cn/">学院官网</a>
-      </div>
-    </nav>
+  <div class="Main">
+    <div class="Dig_appearance">
+      <div class="appearance" ref="container"></div>
 
-    <!-- 主内容区 -->
-    <main class="main">
-      <!-- 左侧信息 -->
-      <aside class="sidebar">
-        <h2><i class="fa fa-info-circle"></i> 学院简介</h2>
-        <p>
-          南特金融科技学院是深圳大学与法国南特高等商学院合作举办，
-          是全国首个聚焦金融科技领域开展中外合作办学的非独立法人机构。
-        </p>
-
-        <h2><i class="fa fa-graduation-cap"></i> 热门咨询问题</h2>
-        <ul>
-          <li @click="insertQuestion('学院的招生专业有哪些？')">学院的招生专业有哪些？</li>
-          <li @click="insertQuestion('双学位项目的具体要求是什么？')">双学位项目的具体要求是什么？</li>
-          <li @click="insertQuestion('学院的师资力量如何？')">学院的师资力量如何？</li>
-          <li @click="insertQuestion('毕业生的就业方向有哪些？')">毕业生的就业方向有哪些？</li>
-        </ul>
-      </aside>
-
-      <!-- 聊天面板 -->
-      <section class="chat">
-        <header class="chat-header">
-          <img src="/Profile.png" alt="机器人头像" class="avatar">
-          <div>
-            <h3>智能招生助手</h3>
-            <p>我可以回答你关于学院招生的问题</p>
-          </div>
-        </header>
-
-        <div class="chat-body record">
-          <div v-for="(msg, index) in messages" :key="index" :class="['msg', msg.role]">
-            <p>{{ msg.text }}</p>
-          </div>
-          <div v-if="isThinking" class="typing">思考中...</div>
-        </div>
-
-        <footer class="chat-footer">
-          <input v-model="inputText" @keyup.enter="sendMessage" type="text" placeholder="请输入你的问题...">
-          <button @click="isGenerating ? stopGenerating() : sendMessage">
-            <i class="fa fa-paper-plane"></i>发送
-          </button>
-        </footer>
-        <p class="hint">输入 "菜单" 查看常见问题，或输入 "转人工" 联系招生办老师</p>
-      </section>
-    </main>
-
-    <!-- 联系方式 -->
-    <div class="contact">
-      <h2><i class="fa fa-phone"></i> 联系方式</h2>
-      <div class="info">
-        <span><i class="fa fa-envelope-o"></i> 邮箱：safti-admission@szu.edu.cn</span>
-        <span><i class="fa fa-phone"></i> 电话：0755-26531523</span>
-        <span><i class="fa fa-map-marker"></i> 地址：广东省深圳市南山区南海大道3688号</span>
+      <div class="controls">
+        <button class="mute" :class="{ active: isMuted }" @click="isMuted = !isMuted">🎤Mute</button>
+        <button class="still" :class="{ active: isStopped }" @click="isStopped = !isStopped">🛑Stop</button>
       </div>
     </div>
 
-    <!-- 页脚 -->
-    <footer class="footer">
-      <p>© 2025 南特金融科技学院. 保留所有权利.</p>
-      <div>
-        <i class="fa fa-weixin"></i>
-        <i class="fa fa-weibo"></i>
-        <i class="fa fa-linkedin"></i>
+    <div class="interact">
+      <div class="record">
+        <div
+          v-for="(msg, index) in messages"
+          :key="index"
+          :class="['message', msg.role, msg.text === '...' ? 'thinking' : '']"    
+        >
+          {{ msg.text }}
+        </div>
       </div>
-    </footer>
+      <div class="input_box">
+        <textarea
+          class="question"
+          placeholder="Type your question here..."
+          v-model="inputText"
+          @keyup.enter="sendMessage"
+        ></textarea>
+        <div class="send_button" @click="isGenerating ? stopGenerating() : sendMessage">
+          {{ isGenerating ? 'Stop' : 'Send' }}
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* 全局 */
-.app {
-  font-family: 'Inter', sans-serif;
-  background: #fff;
-  color: #1D2129;
-  min-height: 100vh;
-  width: 100%;          /* ✅ 用百分比而不是 vw */
+.Main {
+  width: 1560px;
+  height:960px;
+  min-width: 600px;
+  min-height: 400px;
+  background-color: white;
+  border-radius: 20px;
+  box-shadow: -10px 10px 30px rgba(0, 0, 0, 0.2);
+  margin: 40px 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4%;
+  position: relative;
+  margin-left: -150px; /* 距离左侧 100px */
+}
+.Dig_appearance,
+.interact {
+  width: 47%;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: honeydew;
+  border: 1px solid #000;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
 }
-
-.main {
-  flex: 1;
-  display: flex;
+.interact {
   gap: 20px;
-  padding: 20px;
-  width: 100%;          /* ✅ 占满屏幕 */
-  max-width: none;      /* ✅ 禁止收窄 */
-  min-height: 0;   /* 🚀 保证内部滚动，而不是撑开外部 */
-  margin: 0;            /* ✅ 禁止居中 */
-  box-sizing: border-box;
 }
-/* 导航栏 */
-.navbar {
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+.controls {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 24px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-.navbar-left {
-  display: flex;
-  align-items: center;
   gap: 10px;
 }
-.logo {
-  width: 40px;
-  height: 40px;
+.controls button {
+  background-color: #eee;
+  border: none;
   border-radius: 8px;
-}
-.navbar-left h1 {
-  font-size: 18px;
-  font-weight: bold;
-  color: #0055A5;
-}
-.navbar-left p {
+  padding: 5px 10px;
   font-size: 12px;
-  color: #666;
-}
-.navbar-right a {
-  margin-left: 20px;
-  font-size: 14px;
-  color: #555;
-  text-decoration: none;
-}
-.navbar-right a:hover {
-  color: #0055A5;
+  transition: background-color 0.2s ease;
 }
 
-/* 主内容区 */
+.controls button.active {
+  background-color: #50e3c2; /* 青绿色，表示开启 */
+  color: white;
+}
+.appearance {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
-.sidebar {
-  width: 30%;
-  background: #fff;
+.record {
+  width: 95%;
+  height: 70%;
+  min-height: 350px;
+  background-color: azure;
+  border: 1px solid #000;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.sidebar h2 {
-  font-size: 16px;
-  font-weight: bold;
-  color: #0055A5;
-  margin: 16px 0 8px;
-}
-.sidebar p {
-  font-size: 14px;
-  color: #444;
-  line-height: 1.6;
-}
-.sidebar ul {
-  list-style: none;
-  padding: 0;
-}
-.sidebar li {
-  padding: 8px;
-  background: #F5F7FA;
-  border-radius: 6px;
-  margin-bottom: 6px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.sidebar li:hover {
-  background: #EAF3FF;
-}
-
-.sidebar {
-  flex: 0 0 30%;   /* ✅ 固定 30% 宽 */
-  max-width: 30%;
-}
-
-.chat {
-  flex: 1;         /* ✅ 自动填满剩余空间 */
-  min-width: 0;    /* ✅ 防止撑破 */
-}
-
-/* 聊天 */
-.chat {
-  flex: 1;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  height: 100%;      /* 🚀 确保它不会被内容撑高 */
-  min-height: 0;     /* 🚀 防止 flex 子元素溢出 */
-}
-.chat-header {
-  display: flex;
+  justify-content: flex-start;
   align-items: center;
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-}
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  margin-right: 12px;
-}
-.chat-header h3 {
-  font-weight: bold;
-  color: #0055A5;
-}
-.chat-header p {
-  font-size: 12px;
-  color: #666;
-}
-.chat-body {
-  flex: 1;
-  min-height: 0;      /* 🚀 防止撑开父级 */
-  padding: 12px;
+  position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  word-wrap: break-word;
-  word-break: break-word;
+  margin-top: 10px;
+  flex-shrink: 0;
 }
-.msg {
-  margin-bottom: 10px;
-  max-width: 70%;   /* ✅ 不超过聊天区的 70% */
-  padding: 10px;
-  border-radius: 8px;
-  word-wrap: break-word;
-  word-break: break-word;
-}
-.msg.user {
-  margin-left: auto;
-  background: #0055A5;
-  color: white;
-  border-bottom-right-radius: 0;
-}
-.msg.ai {
-  margin-right: auto;
-  background: #F5F7FA;
-  color: #333;
-  border-bottom-left-radius: 0;
-}
-.typing {
-  font-style: italic;
-  color: #888;
-  animation: blink 1.5s infinite;
-}
-@keyframes blink {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
-}
-.chat-footer {
+
+.input_box {
+  width: 80%;
+  height: 20%;
+  position: relative;
   display: flex;
-  align-items: center;
-  padding: 12px;
-  border-top: 1px solid #eee;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
-.chat-footer input {
-  flex: 1;
-  padding: 8px 12px;
+
+.question {
+  width: 100%;
+  min-height: 40px;
+  max-height: 72px;
+  resize: none;
+  overflow-y: auto;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  border-radius: 20px;
-  outline: none;
-  font-size: 14px;
+  line-height: 1.4;
+  box-sizing: border-box;
+   font-size: 20px;
+  line-height: 1.5;
+  font-weight: 400; /* 稍微加粗 */
 }
-.chat-footer button {
-  margin-left: 8px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 50%;
-  background: #0055A5;
+
+.send_button {
+  width: 36px;
+  height: 36px;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  background-color: #50e3c2;
   color: white;
-  cursor: pointer;
-}
-.hint {
-  font-size: 12px;
   text-align: center;
-  color: #666;
-  margin: 8px 0;
-}
-
-/* 联系方式 */
-.contact {
-  background: #F5F7FA;
-  padding: 20px;
-  border-top: 1px solid #ddd;
-}
-.contact h2 {
-  color: #0055A5;
-  font-size: 16px;
-  margin-bottom: 12px;
-}
-.contact .info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  font-size: 14px;
-}
-
-/* 页脚 */
-.footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  border-top: 1px solid #eee;
-  padding: 12px 20px;
-  font-size: 14px;
-  color: #555;
-}
-.footer i {
-  margin-left: 10px;
+  line-height: 36px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: color 0.2s;
-}
-.footer i:hover {
-  color: #0055A5;
+  font-size: 14px;
 }
 </style>
 
-
 <style>
 html, body {
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
-  width: 100%;
-  height: 100%;
-  background: #fff;   /* 防止出现黑边 */
+  display: flex;
+  justify-content: center;  /* 水平居中 */
+  align-items: center;      /* 垂直居中 */
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: azure;
+  /* background: linear-gradient(
+    to right,
+    rgba(155, 47, 238, 0.8),
+    rgba(100, 61, 255, 0.8)
+  ); */
+  font-family: sans-serif;
+}
+</style>
+
+<style scoped>
+.message {
+  max-width: 80%;
+  padding: 10px 14px;
+  margin: 6px 0;
+  font-size: 18px;
+  line-height: 1.5;
+  word-break: break-word;
+  border-radius: 12px;
+  position: relative;
+  font-weight: 500;
 }
 
-#app {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
+.message.user {
+  align-self: flex-end;
+  background-color: #dcf8c6;
+  color: #333;
+  border-bottom-right-radius: 0;
 }
 
-.app {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.message.ai {
+  align-self: flex-start;
+  background-color: #f1f0f0;
+  color: #0a529c;
+  border-bottom-left-radius: 0;
+}
+.thinking {
+  font-style: italic;
+  color: #888;
+  animation: breathing 1.5s ease-in-out infinite;
 }
 
-.main {
-  flex: 1;
-  display: flex;
-  width: 100%;       /* ✅ 铺满 */
-  height: 100%;      /* ✅ 铺满 */
-  gap: 20px;
-  padding: 20px;
-  box-sizing: border-box;
+@keyframes breathing {
+  0% { color: #333; }
+  50% { color: #aaa; }
+  100% { color: #333; }
 }
 </style>
